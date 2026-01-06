@@ -3,10 +3,10 @@ import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { 
   Home, Zap, Wallet, LogOut, Loader2, Users, ShieldCheck, 
-  LayoutDashboard, CreditCard, ChevronRight
+  LayoutDashboard, CreditCard, ChevronRight, ClipboardList
 } from 'lucide-react';
 
-// Components (Assuming they exist or were provided in previous turns)
+// Components
 import Dashboard from './components/Dashboard';
 import EarnView from './components/EarnView';
 import WalletView from './components/WalletView';
@@ -59,7 +59,6 @@ const App: React.FC = () => {
       if (tg) {
         tg.ready();
         tg.expand();
-        // Set theme colors if possible
         if (tg.setHeaderColor) tg.setHeaderColor('#020617');
       }
     }
@@ -189,6 +188,7 @@ const App: React.FC = () => {
             {[
               { id: 'admin_dashboard', icon: LayoutDashboard, label: 'Dash' },
               { id: 'admin_users', icon: Users, label: 'Users' },
+              { id: 'admin_tasks', icon: ClipboardList, label: 'Tasks' },
               { id: 'admin_payouts', icon: CreditCard, label: 'Payouts' }
             ].map(n => (
               <button key={n.id} onClick={() => setView(n.id as AppView)} className={`flex flex-col items-center gap-2 ${view === n.id ? 'text-red-600' : 'text-slate-500'}`}>
