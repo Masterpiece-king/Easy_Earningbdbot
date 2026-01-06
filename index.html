@@ -4,44 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>earningBD - Watch & Earn</title>
-    
-    <!-- Core CSS & Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        
         body {
             font-family: 'Inter', -apple-system, sans-serif;
             background-color: #020617; 
             color: #f8fafc;
-            margin: 0; 
-            padding: 0;
+            margin: 0; padding: 0;
             overflow: hidden;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
-
-        #root {
-            min-height: 100vh;
-            background-color: #020617;
-        }
-
+        #root { min-height: 100vh; background-color: #020617; }
         .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-        
         @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         .animate-scaleIn { animation: scaleIn 0.3s ease-out forwards; }
-
         ::-webkit-scrollbar { display: none; }
     </style>
-
-    <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Monetag SDK Integration -->
     <script src='//libtl.com/sdk.js' data-zone='10409528' data-sdk='show_10409528'></script>
-
-    <!-- Import Map - Standardized on React 18.2.0 to resolve ERESOLVE conflicts with lucide-react -->
     <script type="importmap">
 {
   "imports": {
@@ -55,7 +38,9 @@
     "firebase/analytics": "https://esm.sh/firebase@10.7.0/analytics",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "react/": "https://esm.sh/react@^19.2.3/",
-    "firebase/": "https://esm.sh/firebase@^12.7.0/"
+    "firebase/": "https://esm.sh/firebase@^12.7.0/",
+    "vite": "https://esm.sh/vite@^7.3.0",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>
@@ -63,7 +48,6 @@
 </head>
 <body>
     <div id="root"></div>
-    <!-- Script path is relative for GitHub Pages and Netlify compatibility -->
     <script type="module" src="./index.tsx"></script>
 <script type="module" src="/index.tsx"></script>
 </body>
