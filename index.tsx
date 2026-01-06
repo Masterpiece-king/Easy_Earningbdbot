@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { 
@@ -11,13 +10,13 @@ import {
 } from 'lucide-react';
 
 // --- Components ---
-import Dashboard from './components/Dashboard';
-import EarnView from './components/EarnView';
-import WalletView from './components/WalletView';
-import AdminPanel from './components/AdminPanel';
+import Dashboard from './components/Dashboard.tsx';
+import EarnView from './components/EarnView.tsx';
+import WalletView from './components/WalletView.tsx';
+import AdminPanel from './components/AdminPanel.tsx';
 
 // --- Types ---
-import { UserRole, AppView, UserProfile, WithdrawalRecord } from './types';
+import { UserRole, AppView, UserProfile, WithdrawalRecord } from './types.ts';
 
 // Declare Telegram WebApp types
 declare global {
@@ -118,7 +117,6 @@ const App: React.FC = () => {
     );
   }
 
-  // Guest View / Login Screen
   if (role === 'guest') {
     return (
       <div className="h-screen bg-slate-950 flex flex-col p-10 justify-center items-center space-y-12 animate-fadeIn">
@@ -235,5 +233,8 @@ const App: React.FC = () => {
   );
 };
 
-const root = ReactDOM.createRoot(document.getElementById('root')!);
-root.render(<App />);
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(<App />);
+}
