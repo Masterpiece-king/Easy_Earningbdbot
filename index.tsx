@@ -2,20 +2,21 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { 
-  Home, Zap, Wallet, LogOut, Loader2, Send, Users, ShieldCheck, 
-  History, Clock, X, LayoutDashboard, CreditCard, ChevronRight
+  Home, Zap, Wallet, LogOut, Loader2, Users, ShieldCheck, 
+  LayoutDashboard, CreditCard, ChevronRight
 } from 'lucide-react';
 
-// --- Components ---
+// Components (Assuming they exist or were provided in previous turns)
 import Dashboard from './components/Dashboard';
 import EarnView from './components/EarnView';
 import WalletView from './components/WalletView';
 import AdminPanel from './components/AdminPanel';
 
-// --- Types ---
+// Types
 import { UserRole, AppView, UserProfile, WithdrawalRecord } from './types';
 
 const getPersistentUserId = () => {
+  if (typeof window === 'undefined') return 'BUILD_TIME_ID';
   const tg = (window as any).Telegram?.WebApp;
   const tgId = tg?.initDataUnsafe?.user?.id;
   if (tgId) return `TG-${tgId}`;
@@ -34,8 +35,10 @@ const App: React.FC = () => {
   const [initialized, setInitialized] = useState(false);
 
   const [user, setUser] = useState<UserProfile>(() => {
-    const tg = (window as any).Telegram?.WebApp;
-    const tgUser = tg?.initDataUnsafe?.user;
+    let tgUser = null;
+    if (typeof window !== 'undefined') {
+       tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+    }
     return {
       id: getPersistentUserId(), 
       username: tgUser?.username || tgUser?.first_name || 'Earner', 
@@ -51,10 +54,14 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    const tg = (window as any).Telegram?.WebApp;
-    if (tg) {
-      tg.ready();
-      tg.expand();
+    if (typeof window !== 'undefined') {
+      const tg = (window as any).Telegram?.WebApp;
+      if (tg) {
+        tg.ready();
+        tg.expand();
+        // Set theme colors if possible
+        if (tg.setHeaderColor) tg.setHeaderColor('#020617');
+      }
     }
     setInitialized(true);
   }, []);
@@ -196,5 +203,8 @@ const App: React.FC = () => {
   );
 };
 
-const root = ReactDOM.createRoot(document.getElementById('root')!);
-root.render(<App />);
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(<App />);
+}
