@@ -13,7 +13,7 @@
         
         body {
             font-family: 'Inter', -apple-system, sans-serif;
-            background-color: #020617; /* Darkest slate for premium look */
+            background-color: #020617; 
             color: #f8fafc;
             margin: 0; 
             padding: 0;
@@ -22,7 +22,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* Prevent white flash */
         #root {
             min-height: 100vh;
             background-color: #020617;
@@ -40,7 +39,7 @@
     <!-- Monetag SDK Integration -->
     <script src='//libtl.com/sdk.js' data-zone='10409528' data-sdk='show_10409528'></script>
 
-    <!-- Import Map - Standardized on React 18 for GitHub Pages Stability -->
+    <!-- Import Map - Fixed for React 18 & GitHub Pages -->
     <script type="importmap">
 {
   "imports": {
@@ -60,6 +59,7 @@
 </head>
 <body>
     <div id="root"></div>
+    <!-- Use relative path for GitHub Pages compatibility -->
     <script type="module" src="index.tsx"></script>
 <script type="module" src="/index.tsx"></script>
 </body>
