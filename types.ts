@@ -56,4 +56,4 @@ export interface EarnTask {
   description: string;
 }
 
-export type AppView = 'home' | 'earn' | 'leaderboard' | 'wallet' | 'admin_dashboard' | 'admin_users' | 'admin_payouts';
+export type AppView = 'home' | 'earn' | 'leaderboard' | 'wallet' | 'admin_dashboard' | 'admin_users' | 'admin_payouts' | 'admin_tasks';
