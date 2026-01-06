@@ -1,49 +1,26 @@
+
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { 
-  Home, Zap, Award, Wallet, Coins, LogOut, TrendingUp, ArrowRight, User, 
-  ChevronRight, Loader2, CheckCircle2, Tv, Trophy, Send, Users, 
-  ExternalLink, Copy, UserPlus, Star, Info, ShieldCheck, History, Clock, X,
-  ClipboardList, AlertCircle, Sparkles, LayoutDashboard, CreditCard, 
-  Smartphone, DollarSign, Landmark, Phone, ShieldAlert, Key, Search,
-  Layout, Layers, MonitorPlay, PlayCircle, Fingerprint
+  Home, Zap, Wallet, LogOut, Loader2, Send, Users, ShieldCheck, 
+  History, Clock, X, LayoutDashboard, CreditCard, ChevronRight
 } from 'lucide-react';
 
 // --- Components ---
-import Dashboard from './components/Dashboard.tsx';
-import EarnView from './components/EarnView.tsx';
-import WalletView from './components/WalletView.tsx';
-import AdminPanel from './components/AdminPanel.tsx';
+import Dashboard from './components/Dashboard';
+import EarnView from './components/EarnView';
+import WalletView from './components/WalletView';
+import AdminPanel from './components/AdminPanel';
 
 // --- Types ---
-import { UserRole, AppView, UserProfile, WithdrawalRecord } from './types.ts';
-
-// Declare Telegram WebApp types
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp: {
-        ready: () => void;
-        expand: () => void;
-        initDataUnsafe: {
-          user?: {
-            id: number;
-            username?: string;
-            first_name?: string;
-          };
-        };
-      };
-    };
-  }
-}
+import { UserRole, AppView, UserProfile, WithdrawalRecord } from './types';
 
 const getPersistentUserId = () => {
-  const tgId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  const tg = (window as any).Telegram?.WebApp;
+  const tgId = tg?.initDataUnsafe?.user?.id;
   if (tgId) return `TG-${tgId}`;
-  
   const savedId = localStorage.getItem('ebd_user_id_v3');
   if (savedId) return savedId;
-  
   const newId = `EBD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
   localStorage.setItem('ebd_user_id_v3', newId);
   return newId;
@@ -57,7 +34,8 @@ const App: React.FC = () => {
   const [initialized, setInitialized] = useState(false);
 
   const [user, setUser] = useState<UserProfile>(() => {
-    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    const tg = (window as any).Telegram?.WebApp;
+    const tgUser = tg?.initDataUnsafe?.user;
     return {
       id: getPersistentUserId(), 
       username: tgUser?.username || tgUser?.first_name || 'Earner', 
@@ -73,9 +51,10 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand();
+    const tg = (window as any).Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
     }
     setInitialized(true);
   }, []);
@@ -98,7 +77,6 @@ const App: React.FC = () => {
       date: new Date().toLocaleDateString(),
       status: 'pending'
     };
-
     setUser(prev => ({
       ...prev,
       balance: prev.balance - amount,
@@ -106,8 +84,6 @@ const App: React.FC = () => {
       pendingWithdrawal: { amount, method, date: record.date }
     }));
   };
-
-  const handleNavigate = (v: AppView) => setView(v);
 
   if (!initialized) {
     return (
@@ -139,28 +115,18 @@ const App: React.FC = () => {
           </div>
         ) : (
           <div className="w-full max-w-xs space-y-6 animate-fadeIn">
-            <div className="space-y-2">
-               <label className="text-[10px] font-black text-slate-600 uppercase tracking-widest ml-4">Secure Pass Key</label>
-               <input 
-                type="password" 
-                placeholder="Enter Key" 
-                value={adminKeyInput}
-                onChange={(e) => setAdminKeyInput(e.target.value)}
-                className="w-full bg-slate-900 border-2 border-slate-800 rounded-3xl px-8 py-5 text-center font-black text-red-600 focus:outline-none focus:border-red-600 transition-all"
-              />
-            </div>
+            <input 
+              type="password" 
+              placeholder="Enter Key" 
+              value={adminKeyInput}
+              onChange={(e) => setAdminKeyInput(e.target.value)}
+              className="w-full bg-slate-900 border-2 border-slate-800 rounded-3xl px-8 py-5 text-center font-black text-red-600 focus:outline-none focus:border-red-600"
+            />
             <div className="flex gap-3">
               <button onClick={() => setIsAdminLoginVisible(false)} className="flex-1 bg-slate-800 text-slate-500 py-5 rounded-2xl font-black text-[10px] uppercase">Back</button>
               <button 
-                onClick={() => { 
-                  if (adminKeyInput === 'admin123') {
-                    setRole('admin');
-                    setView('admin_dashboard');
-                  } else {
-                    alert("Wrong Key! Use admin123");
-                  }
-                }}
-                className="flex-[2] bg-red-600 text-white py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-red-900/20"
+                onClick={() => adminKeyInput === 'admin123' ? (setRole('admin'), setView('admin_dashboard')) : alert("Wrong Key!")}
+                className="flex-[2] bg-red-600 text-white py-5 rounded-2xl font-black text-[10px] uppercase tracking-widest"
               >
                 Log In
               </button>
@@ -178,29 +144,26 @@ const App: React.FC = () => {
           <div className="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center">
             {role === 'admin' ? <ShieldCheck className="w-6 h-6 text-white" /> : <Zap className="w-6 h-6 fill-white text-white" />}
           </div>
-          <div>
-            <h1 className="text-xl font-black italic uppercase tracking-tighter leading-none">earningBD</h1>
-            <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest">{role} Portal</span>
-          </div>
+          <h1 className="text-xl font-black italic uppercase tracking-tighter">earningBD</h1>
         </div>
-        <button onClick={() => { setRole('guest'); setView('home'); }} className="p-2 text-slate-800 hover:text-red-500 transition-colors">
+        <button onClick={() => (setRole('guest'), setView('home'))} className="p-2 text-slate-800 hover:text-red-500">
           <LogOut className="w-5 h-5" />
         </button>
       </header>
 
       <main className="flex-1 overflow-y-auto">
         {role === 'admin' ? (
-          <AdminPanel view={view} onNavigate={handleNavigate} />
+          <AdminPanel view={view} onNavigate={setView} />
         ) : (
           <>
-            {view === 'home' && <Dashboard user={user} onNavigate={handleNavigate} />}
+            {view === 'home' && <Dashboard user={user} onNavigate={setView} />}
             {view === 'earn' && <EarnView user={user} onComplete={handleReward} onReferralAdded={() => handleReward(10)} />}
             {view === 'wallet' && <WalletView user={user} onWithdraw={handleWithdrawal} onClearPending={() => setUser(p => ({...p, pendingWithdrawal: undefined}))} />}
           </>
         )}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/90 backdrop-blur-3xl border-t border-slate-800 flex justify-around py-6 z-50 px-6">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/90 backdrop-blur-3xl border-t border-slate-800 flex justify-around py-6 z-50">
         {role === 'user' ? (
           <>
             {[
@@ -208,9 +171,9 @@ const App: React.FC = () => {
               { id: 'earn', icon: Zap, label: 'Earn' },
               { id: 'wallet', icon: Wallet, label: 'Wallet' }
             ].map(n => (
-              <button key={n.id} onClick={() => setView(n.id as AppView)} className={`flex flex-col items-center gap-2 transition-all ${view === n.id ? 'text-red-600' : 'text-slate-500'}`}>
-                <n.icon className={`w-7 h-7 ${view === n.id ? 'fill-red-600/10' : ''}`} />
-                <span className="text-[9px] font-black uppercase tracking-widest">{n.label}</span>
+              <button key={n.id} onClick={() => setView(n.id as AppView)} className={`flex flex-col items-center gap-2 ${view === n.id ? 'text-red-600' : 'text-slate-500'}`}>
+                <n.icon className="w-7 h-7" />
+                <span className="text-[9px] font-black uppercase">{n.label}</span>
               </button>
             ))}
           </>
@@ -221,9 +184,9 @@ const App: React.FC = () => {
               { id: 'admin_users', icon: Users, label: 'Users' },
               { id: 'admin_payouts', icon: CreditCard, label: 'Payouts' }
             ].map(n => (
-              <button key={n.id} onClick={() => setView(n.id as AppView)} className={`flex flex-col items-center gap-2 transition-all ${view === n.id ? 'text-red-600' : 'text-slate-500'}`}>
+              <button key={n.id} onClick={() => setView(n.id as AppView)} className={`flex flex-col items-center gap-2 ${view === n.id ? 'text-red-600' : 'text-slate-500'}`}>
                 <n.icon className="w-7 h-7" />
-                <span className="text-[9px] font-black uppercase tracking-widest">{n.label}</span>
+                <span className="text-[9px] font-black uppercase">{n.label}</span>
               </button>
             ))}
           </>
@@ -233,8 +196,5 @@ const App: React.FC = () => {
   );
 };
 
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(<App />);
-}
+const root = ReactDOM.createRoot(document.getElementById('root')!);
+root.render(<App />);
