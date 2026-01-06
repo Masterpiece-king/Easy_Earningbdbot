@@ -41,7 +41,7 @@
     <!-- Monetag SDK Integration -->
     <script src='//libtl.com/sdk.js' data-zone='10409528' data-sdk='show_10409528'></script>
 
-    <!-- Import Map - Standardized on React 18.2.0 to prevent ERESOLVE conflicts -->
+    <!-- Import Map - Standardized on React 18.2.0 to resolve ERESOLVE conflicts with lucide-react -->
     <script type="importmap">
 {
   "imports": {
@@ -63,7 +63,7 @@
 </head>
 <body>
     <div id="root"></div>
-    <!-- Script path is relative for GitHub Pages compatibility -->
+    <!-- Script path is relative for GitHub Pages and Netlify compatibility -->
     <script type="module" src="./index.tsx"></script>
 <script type="module" src="/index.tsx"></script>
 </body>
