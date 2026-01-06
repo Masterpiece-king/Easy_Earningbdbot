@@ -6,59 +6,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>earningBD - Watch & Earn</title>
     
-    <!-- Core Scripts -->
+    <!-- Core CSS & Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Monetag SDK Integration -->
-    <script src='//libtl.com/sdk.js' data-zone='10409528' data-sdk='show_10409528'></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         
         body {
             font-family: 'Inter', -apple-system, sans-serif;
-            background-color: #020617;
+            background-color: #020617; /* Darkest slate for premium look */
             color: #f8fafc;
-            margin: 0; padding: 0;
+            margin: 0; 
+            padding: 0;
             overflow: hidden;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* Prevent white flash */
+        #root {
+            min-height: 100vh;
+            background-color: #020617;
+        }
+
         .animate-fadeIn { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         
-        .coin-fountain { 
-            position: absolute; 
-            pointer-events: none; 
-            z-index: 100; 
-            animation: fountain 1.5s ease-out forwards; 
-        }
-
-        @keyframes fountain { 
-            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
-            100% { transform: translate(var(--x), var(--y)) scale(0.5) rotate(360deg); opacity: 0; }
-        }
-        
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
         ::-webkit-scrollbar { display: none; }
-        
-        .tab-active { background: white; color: #ef4444; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2); }
-        .gradient-text { background: linear-gradient(to right, #ef4444, #f43f5e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .payout-btn:active { transform: scale(0.95); }
     </style>
-<script type="importmap">
+
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Monetag SDK Integration -->
+    <script src='//libtl.com/sdk.js' data-zone='10409528' data-sdk='show_10409528'></script>
+
+    <!-- Import Map for ES Modules - Cleaned for React 18 Compatibility -->
+    <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom": "https://esm.sh/react-dom@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "react/jsx-runtime": "https://esm.sh/react@18.2.0/jsx-runtime",
+    "lucide-react": "https://esm.sh/lucide-react@0.284.0",
+    "@google/genai": "https://esm.sh/@google/genai@1.34.0",
     "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.34.0",
     "react/": "https://esm.sh/react@^19.2.3/",
     "firebase/": "https://esm.sh/firebase@^12.7.0/"
   }
@@ -69,237 +61,8 @@
 <body>
     <div id="root"></div>
 
-    <script type="text/javascript">
-        // Initialize Telegram WebApp
-        if (window.Telegram && window.Telegram.WebApp) {
-            window.Telegram.WebApp.ready();
-            window.Telegram.WebApp.expand();
-        }
-
-        const { useState, useEffect, useCallback } = React;
-
-        const App = () => {
-            const [role, setRole] = useState('guest'); // guest, user, admin
-            const [view, setView] = useState('home'); // home, earn, tasks, refer, wallet
-            const [balance, setBalance] = useState(150);
-            const [userId, setUserId] = useState('');
-            const [username, setUsername] = useState('User');
-            const [adminKeyInput, setAdminKeyInput] = useState('');
-            const [taskStatus, setTaskStatus] = useState({});
-            const [floatingCoins, setFloatingCoins] = useState([]);
-            const [referralCode, setReferralCode] = useState('');
-
-            // App Startup
-            useEffect(() => {
-                const tg = window.Telegram?.WebApp;
-                const tgUser = tg?.initDataUnsafe?.user;
-                setUsername(tgUser?.username || tgUser?.first_name || 'Earner');
-                
-                let localId = localStorage.getItem('ebd_uid_final');
-                if (!localId) {
-                    localId = `EBD-${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-                    localStorage.setItem('ebd_uid_final', localId);
-                }
-                setUserId(localId);
-                setReferralCode(`REF-${localId.split('-')[1]}`);
-            }, []);
-
-            // Lucide Icon Helper
-            const Icon = ({ name, className = "w-6 h-6", fill = "none" }) => {
-                useEffect(() => { if(window.lucide) lucide.createIcons(); }, [name, view, role]);
-                return React.createElement('i', { 'data-lucide': name, className, style: { fill: fill !== 'none' ? fill : 'transparent' } });
-            };
-
-            const triggerCoins = useCallback(() => {
-                const newCoins = Array.from({ length: 12 }).map(() => ({
-                    id: Math.random(),
-                    x: (Math.random() * 300) - 150 + 'px',
-                    y: (Math.random() * -450) - 100 + 'px'
-                }));
-                setFloatingCoins(newCoins);
-                setTimeout(() => setFloatingCoins([]), 2000);
-            }, []);
-
-            const handleWatchAd = async () => {
-                if (window.show_10409528) {
-                    try {
-                        await window.show_10409528();
-                        setBalance(prev => prev + 5);
-                        triggerCoins();
-                        alert("Success! +5 Coins Added.");
-                    } catch (e) {
-                        alert("Ad session interrupted. Please try again.");
-                    }
-                } else {
-                    alert("Ad network connecting... try in 3 seconds.");
-                }
-            };
-
-            const handleTask = (id, link, reward) => {
-                const current = taskStatus[id] || 'available';
-                if (current === 'available') {
-                    window.open(link, '_blank');
-                    setTaskStatus(prev => ({ ...prev, [id]: 'clicked' }));
-                } else if (current === 'clicked') {
-                    setTaskStatus(prev => ({ ...prev, [id]: 'verifying' }));
-                    setTimeout(() => {
-                        setBalance(b => b + reward);
-                        setTaskStatus(prev => ({ ...prev, [id]: 'done' }));
-                        triggerCoins();
-                    }, 1500);
-                }
-            };
-
-            const Header = () => React.createElement('header', { className: "p-6 flex justify-between items-center bg-slate-950/80 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50" },
-                React.createElement('div', { className: "flex items-center gap-3" },
-                    React.createElement('div', { className: "w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-600/20" }, 
-                        React.createElement(Icon, { name: role === 'admin' ? "shield-check" : "zap", className: "w-6 h-6 text-white" })
-                    ),
-                    React.createElement('div', null, 
-                        React.createElement('h1', { className: "text-lg font-black italic text-white uppercase tracking-tighter" }, "earningBD"),
-                        React.createElement('p', { className: "text-[8px] font-black text-slate-500 uppercase tracking-widest" }, `ID: ${userId}`)
-                    )
-                ),
-                React.createElement('button', { onClick: () => { setRole('guest'); setView('home'); }, className: "p-2 text-slate-700" }, React.createElement(Icon, { name: "log-out", className: "w-5 h-5" }))
-            );
-
-            // GUEST VIEW (LOGIN)
-            if (role === 'guest') {
-                return React.createElement('div', { className: "h-screen bg-slate-950 flex flex-col items-center justify-center p-10 space-y-12 animate-fadeIn" },
-                    React.createElement('div', { className: "text-center space-y-4" },
-                        React.createElement('div', { className: "w-24 h-24 bg-red-600 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl animate-bounce" },
-                            React.createElement(Icon, { name: "zap", className: "w-12 h-12 text-white", fill: "white" })
-                        ),
-                        React.createElement('h1', { className: "text-5xl font-black italic tracking-tighter text-white uppercase" }, "earningBD")
-                    ),
-                    React.createElement('div', { className: "w-full max-w-xs space-y-4" },
-                        React.createElement('button', { onClick: () => setRole('user'), className: "w-full bg-white text-slate-950 py-6 rounded-3xl font-black uppercase tracking-widest active:scale-95 transition-all shadow-xl" }, "Access Portal"),
-                        React.createElement('div', { className: "pt-8 space-y-3" },
-                            React.createElement('input', { 
-                                type: "password", placeholder: "Admin Secure Key", 
-                                className: "w-full bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center text-red-500 font-bold text-sm",
-                                value: adminKeyInput, onChange: e => setAdminKeyInput(e.target.value)
-                            }),
-                            React.createElement('button', { onClick: () => adminKeyInput === 'admin123' ? setRole('admin') : alert("Use admin123 for demo"), className: "w-full text-slate-600 text-[10px] font-black uppercase tracking-widest" }, "Staff Login")
-                        )
-                    )
-                );
-            }
-
-            const renderView = () => {
-                if (role === 'admin') return React.createElement('div', { className: "p-6 space-y-6 animate-fadeIn" },
-                    React.createElement('h2', { className: "text-2xl font-black italic uppercase text-white" }, "Admin Terminal"),
-                    React.createElement('div', { className: "bg-slate-900 border-2 border-dashed border-slate-800 rounded-[2.5rem] p-12 text-center text-slate-600 font-black" }, "PENDING PAYOUTS: 0")
-                );
-
-                if (view === 'home') return React.createElement('div', { className: "p-6 space-y-6 animate-fadeIn" },
-                    React.createElement('div', { className: "bg-gradient-to-br from-red-600 to-rose-700 rounded-[3rem] p-8 text-white shadow-2xl relative overflow-hidden" },
-                        React.createElement('p', { className: "text-[9px] font-black uppercase opacity-60" }, `@${username}`),
-                        React.createElement('h2', { className: "text-3xl font-black italic mt-2" }, "Your Balance"),
-                        React.createElement('div', { className: "mt-12 flex justify-between items-end" },
-                            React.createElement('div', null, 
-                                React.createElement('div', { className: "flex items-center gap-2" }, 
-                                    React.createElement(Icon, { name: "coins", className: "text-amber-300" }),
-                                    React.createElement('span', { className: "text-5xl font-black tracking-tighter" }, balance.toLocaleString())
-                                )
-                            ),
-                            React.createElement('div', { className: "bg-white/20 px-5 py-3 rounded-2xl text-sm font-black italic border border-white/20" }, `৳ ${(balance * 0.05).toFixed(2)}`)
-                        )
-                    ),
-                    React.createElement('div', { className: "grid grid-cols-1 gap-4" },
-                        [
-                            { id: 'earn', title: 'Watch Ads', sub: 'Earn 5 Coins Instantly', icon: 'play-circle', color: 'red' },
-                            { id: 'tasks', title: 'Daily Tasks', sub: 'Join Official Channel', icon: 'send', color: 'blue' },
-                            { id: 'refer', title: 'Refer & Earn', sub: 'Earn 10 Coins per Invite', icon: 'users', color: 'purple' },
-                            { id: 'wallet', title: 'Withdraw', sub: 'bKash / Nagad / USDT', icon: 'wallet', color: 'green' }
-                        ].map(item => React.createElement('div', { key: item.id, onClick: () => setView(item.id), className: "bg-slate-900 p-6 rounded-[2.5rem] border border-white/5 flex justify-between items-center active:scale-95 transition-all shadow-lg" },
-                            React.createElement('div', { className: "flex items-center gap-5" }, 
-                                React.createElement('div', { className: `w-14 h-14 bg-${item.color}-600/10 rounded-2xl flex items-center justify-center text-${item.color}-500` }, React.createElement(Icon, { name: item.icon })),
-                                React.createElement('div', null, React.createElement('p', { className: "font-black text-white uppercase tracking-tight" }, item.title), React.createElement('p', { className: "text-[10px] text-slate-500 font-bold uppercase" }, item.sub))
-                            ),
-                            React.createElement(Icon, { name: "chevron-right", className: "text-slate-800" })
-                        ))
-                    )
-                );
-
-                if (view === 'earn') return React.createElement('div', { className: "p-6 space-y-6 animate-fadeIn" },
-                    React.createElement('div', { className: "bg-slate-900 rounded-[3.5rem] p-12 border border-white/5 flex flex-col items-center text-center space-y-10" },
-                        React.createElement('div', { className: "w-32 h-32 bg-red-600 rounded-[3rem] flex items-center justify-center text-white shadow-2xl" }, React.createElement(Icon, { name: "play-circle", className: "w-16 h-16" })),
-                        React.createElement('div', null, React.createElement('h3', { className: "text-3xl font-black text-white italic uppercase" }, "Premium Video"), React.createElement('p', { className: "text-xs text-slate-500 font-black uppercase mt-2" }, "Reward: 5 Coins")),
-                        React.createElement('button', { onClick: handleWatchAd, className: "w-full bg-white text-slate-950 py-7 rounded-[2.5rem] font-black text-xl uppercase tracking-widest active:scale-95 shadow-2xl" }, "START AD")
-                    )
-                );
-
-                if (view === 'tasks') return React.createElement('div', { className: "p-6 space-y-6 animate-fadeIn" },
-                    React.createElement('h3', { className: "text-xl font-black text-white uppercase italic" }, "Available Tasks"),
-                    React.createElement('div', { className: `bg-slate-900 p-6 rounded-[2.5rem] border border-white/5 flex justify-between items-center ${taskStatus['ch1'] === 'done' ? 'opacity-40' : ''}` },
-                        React.createElement('div', { className: "flex items-center gap-5" },
-                            React.createElement('div', { className: "w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500" }, React.createElement(Icon, { name: "send" })),
-                            React.createElement('div', null, React.createElement('p', { className: "font-black text-white uppercase" }, "Official Channel"), React.createElement('p', { className: "text-[10px] text-amber-500 font-black" }, "+15 COINS"))
-                        ),
-                        React.createElement('button', { 
-                            disabled: taskStatus['ch1'] === 'done',
-                            onClick: () => handleTask('ch1', 'https://t.me/easy_earning_bdbot', 15),
-                            className: `px-6 py-3 rounded-2xl text-[10px] font-black uppercase ${taskStatus['ch1'] === 'done' ? 'bg-slate-800 text-slate-500' : 'bg-red-600 text-white'}`
-                        }, taskStatus['ch1'] === 'done' ? "COMPLETED" : (taskStatus['ch1'] === 'clicked' ? "VERIFY" : "JOIN"))
-                    )
-                );
-
-                if (view === 'refer') return React.createElement('div', { className: "p-6 space-y-6 animate-fadeIn" },
-                    React.createElement('div', { className: "bg-slate-900 rounded-[3rem] p-10 text-center border border-white/5" },
-                        React.createElement('div', { className: "w-20 h-20 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-6" }, React.createElement(Icon, { name: "users", className: "text-purple-500 w-10 h-10" })),
-                        React.createElement('h3', { className: "text-2xl font-black text-white uppercase italic" }, "Referral Hub"),
-                        React.createElement('p', { className: "text-xs text-slate-500 mt-2 mb-10 uppercase" }, "Invite friends and earn 10 coins each"),
-                        React.createElement('div', { className: "bg-slate-950 p-5 rounded-2xl border border-slate-800 flex justify-between items-center" },
-                            React.createElement('span', { className: "text-xl font-black text-red-500 tracking-widest uppercase px-2" }, referralCode),
-                            React.createElement('button', { onClick: () => { navigator.clipboard.writeText(`Join earningBD with my code ${referralCode}`); alert("Referral text copied!"); }, className: "p-3 bg-red-600 rounded-xl text-white" }, React.createElement(Icon, { name: "copy", className: "w-5 h-5" }))
-                        )
-                    )
-                );
-
-                if (view === 'wallet') return React.createElement('div', { className: "p-6 space-y-6 animate-fadeIn" },
-                    React.createElement('div', { className: "bg-slate-900 rounded-[2.5rem] p-10 border border-white/5 text-center shadow-lg" },
-                        React.createElement(Icon, { name: "wallet", className: "mx-auto mb-4 text-red-500 w-12 h-12" }),
-                        React.createElement('p', { className: "text-[10px] font-black text-slate-500 uppercase tracking-widest" }, "Available Assets"),
-                        React.createElement('p', { className: "text-4xl font-black text-white italic" }, `৳ ${(balance * 0.05).toFixed(2)}`)
-                    ),
-                    React.createElement('div', { className: "space-y-4" },
-                        React.createElement('input', { type: "number", placeholder: "Min 1000 Coins", className: "w-full bg-slate-900 border border-slate-800 p-5 rounded-2xl text-white font-black" }),
-                        React.createElement('input', { type: "text", placeholder: "bKash / Nagad Number", className: "w-full bg-slate-900 border border-slate-800 p-5 rounded-2xl text-white font-black" }),
-                        React.createElement('button', { onClick: () => alert("Processing... please check again in 24 hours."), className: "w-full bg-red-600 py-6 rounded-[2rem] text-white font-black uppercase tracking-widest shadow-2xl active:scale-95" }, "SUBMIT REQUEST")
-                    )
-                );
-            };
-
-            const Nav = () => React.createElement('nav', { className: "fixed bottom-0 left-0 right-0 bg-slate-950/90 backdrop-blur-2xl border-t border-white/5 flex justify-around py-6 px-4 z-50" },
-                [
-                    ['home', 'home', 'Home'],
-                    ['earn', 'play-circle', 'Ads'],
-                    ['tasks', 'send', 'Tasks'],
-                    ['refer', 'users', 'Refer'],
-                    ['wallet', 'wallet', 'Wallet']
-                ].map(([id, icon, label]) => React.createElement('button', {
-                    key: id, onClick: () => setView(id),
-                    className: `flex flex-col items-center gap-2 transition-all ${view === id ? 'text-red-500' : 'text-slate-500'}`
-                }, React.createElement(Icon, { name: icon, className: "w-6 h-6" }), React.createElement('span', { className: "text-[9px] font-black uppercase tracking-widest" }, label)))
-            );
-
-            return React.createElement('div', { className: "flex flex-col h-screen" },
-                React.createElement(Header),
-                React.createElement('main', { className: "flex-1 overflow-y-auto pb-32" }, renderView()),
-                role !== 'guest' && React.createElement(Nav),
-                React.createElement('div', { className: "fixed inset-0 pointer-events-none" },
-                    floatingCoins.map(c => React.createElement('div', { 
-                        key: c.id, className: "coin-fountain", 
-                        style: { left: '50%', bottom: '100px', '--x': c.x, '--y': c.y } 
-                    }, React.createElement(Icon, { name: "coins", className: "text-amber-400 w-10 h-10 shadow-lg" })))
-                )
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(React.createElement(App));
-    </script>
+    <!-- Main Entry Point -->
+    <script type="module" src="./index.tsx"></script>
 <script type="module" src="/index.tsx"></script>
 </body>
 </html>
